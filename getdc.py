@@ -74,7 +74,7 @@ def main():
 	args.nameserver -- NameServer (optional, accepted hostname/ipaddress, default none)
 	args.format -- Format output type, (required, accepted values json/host/ip/hostip'NameServer, default json)
 	args.verbose -- Toggle debug meesages to stdout (required, accepted values boolean)
-        args.exchange -- Toggle whether to look up exchange records (required, default false)
+	args.exchange -- Toggle whether to look up exchange records (required, default false)
 	'''
 	# Arguments from argparse
 	args = arguments.parse_args()
