@@ -28,8 +28,12 @@ def query(name, recordtype='SRV', nameserver=''):
 				custom_resolver = dns.resolver.Resolver(configure=False)
 				custom_resolver.nameservers = [nameserver]
 				answer = custom_resolver.query('_kerberos._tcp.' + name, 'SRV', raise_on_no_answer=True)
+				if args.exchange:
+					answer.append(custom_resolver.query('_autodiscover.' + name, 'SRV', raise_on_no_answer=True))
 			else:
 				answer = dns.resolver.query('_kerberos._tcp.' + name, 'SRV', raise_on_no_answer=True)
+				if args.exchange:
+					answer.append(custom_resolver.query('_autodiscover.' + name, 'SRV', raise_on_no_answer=True))
 			for record in answer:
 				hostname = str(record).lower()[9:] # parse out srv-record for hostname
 				dc_lst.append(hostname) # populate dc_list with hostname
@@ -70,6 +74,7 @@ def main():
 	args.nameserver -- NameServer (optional, accepted hostname/ipaddress, default none)
 	args.format -- Format output type, (required, accepted values json/host/ip/hostip'NameServer, default json)
 	args.verbose -- Toggle debug meesages to stdout (required, accepted values boolean)
+        args.exchange -- Toggle whether to look up exchange records (required, default false)
 	'''
 	# Arguments from argparse
 	args = arguments.parse_args()
