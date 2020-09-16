@@ -8,13 +8,15 @@ import json
 import sys
 
 
-def query(name, recordtype='SRV', nameserver=''):
+def query(name, service='', protocol='', recordtype='', nameserver=''):
 	'''Queries a Domain Name to resolve it's SRV records
 	or queries a Hostname to resolve it's IP records.
 
 	Keyword arguments:
 	name -- DomainName or HostName (required, default none)
-	recordtype -- DNS Record type (required, accepted values SRV/A, default SRV)
+	service -- Service name (optional, accepted values _kerberos./_ldap./_autodiscover., default none)
+	protocol -- Transport protocol of the service (optional, accepted values _tcp./_udp., default none)
+	recordtype -- DNS Record type (optional, accepted values SRV/A, default SRV)
 	nameserver -- Nameserver to query from (optional, default /etc/resolv.conf)
 	'''
 	
@@ -22,28 +24,26 @@ def query(name, recordtype='SRV', nameserver=''):
 	dc_lst = []
 
 	try:
-		# dev
+
 		if recordtype == 'SRV':
-			if nameserver: # checks for custom nameserver
+			if nameserver: # custom nameserver selected
 				custom_resolver = dns.resolver.Resolver(configure=False)
 				custom_resolver.nameservers = [nameserver]
-				answer = custom_resolver.query('_kerberos._tcp.' + name, 'SRV', raise_on_no_answer=True)
-				if args.exchange:
-					answer.append(custom_resolver.query('_autodiscover.' + name, 'SRV', raise_on_no_answer=True))
-			else:
-				answer = dns.resolver.query('_kerberos._tcp.' + name, 'SRV', raise_on_no_answer=True)
-				if args.exchange:
-					answer.append(custom_resolver.query('_autodiscover.' + name, 'SRV', raise_on_no_answer=True))
+				answer = custom_resolver.query(service + protocol + name, recordtype, raise_on_no_answer=True)
+			else: # default nameserver selected
+				answer = dns.resolver.resolve(service + protocol + name, recordtype, raise_on_no_answer=True)
+
 			for record in answer:
 				hostname = str(record).lower()[9:] # parse out srv-record for hostname
 				dc_lst.append(hostname) # populate dc_list with hostname
 		else:
-			if nameserver:  # checks for custom nameserver
+			if nameserver: # custom nameserver selected
 				custom_resolver = dns.resolver.Resolver(configure=False)
 				custom_resolver.nameservers = [nameserver]
-				answer = custom_resolver.query(name, 'A', raise_on_no_answer=True)
-			else:
-				answer = dns.resolver.query(name, 'A', raise_on_no_answer=True)
+				answer = custom_resolver.query(service + protocol + name, recordtype, raise_on_no_answer=True)
+			else: # default nameserver selected
+				answer = dns.resolver.resolve(service + protocol + name, recordtype, raise_on_no_answer=True)
+			
 			for record in answer:
 				ipaddress = str(record)	# convert rdata to string
 				dc_lst.append(ipaddress) # populate dc_list with ipaddress (IPAddress)
@@ -70,7 +70,7 @@ def main():
 	'''Main function to be used when calling getdc.py 
 	
 	Keyword arguments:
-	args.domain -- Domain Name (required, accepted list or single value,default none)
+	args.domain -- Domain Name (required, accepted list or single value, default none)
 	args.nameserver -- NameServer (optional, accepted hostname/ipaddress, default none)
 	args.format -- Format output type, (required, accepted values json/host/ip/hostip'NameServer, default json)
 	args.verbose -- Toggle debug meesages to stdout (required, accepted values boolean)
@@ -89,16 +89,22 @@ def main():
 	dc_dct = {
 	}
 
-	# Run main func query()
+	# Run func query()
 	for domain in args.domain:
 		dc_dct[domain] = {} # initiate nested dict(s) from args.domain
-		answer_srv = query(domain, recordtype='SRV', nameserver=args.nameserver) # call main func query(srv)
+		answer_srv = query(domain, service='_kerberos.', protocol='_tcp.', recordtype='SRV', nameserver=args.nameserver) # call query(srv) to find dc hostname
 		
 		for hostname in answer_srv:
 			dc_dct[domain][str(hostname)] = '' # populat dc_dict with hostname
-			answer_a = query(hostname, recordtype='A', nameserver=args.nameserver) # call the func query(a)
+			answer_a = query(hostname, service='', protocol='', recordtype='A', nameserver=args.nameserver) # call query(a) to find dc ipaddress
 			ipaddress = '\n'.join(answer_a) # convert list to string
 			dc_dct[domain][str(hostname)] = ipaddress # populate dc_dict with ipaddress
+	
+	# Dev exchange
+	if args.exchange:
+		print('[Dev] Exchange servers ')
+		answer_srv = query(domain, service='_autodiscover.', protocol='_tcp.', recordtype='SRV', nameserver=args.nameserver) # call query(srv) to find exchange hostname
+		print(answer_srv, '\n')
 	
 	# format type output json
 	if args.format == 'json': # stdout json

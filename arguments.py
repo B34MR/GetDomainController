@@ -37,7 +37,7 @@ def parse_args():
   main_group.add_argument('-d', '--domain', required=True, type=str, metavar='', default='', help='Domain required', nargs='+')
   main_group.add_argument('-n', '--nameserver', required=False, type=str, metavar='', default='', help='Define Nameserver')
   main_group.add_argument('-f', '--format', required=False, type=str, default='json', choices=['json', 'host', 'ip', 'hostip'])  
-  main_group.add_argument('-e', '--exchange', required=False, action='store_false')
+  main_group.add_argument('-e', '--exchange', required=False, action='store_true')
   # Mutually Exclusive group
   mutually_exclusive_group = parser.add_mutually_exclusive_group()
   mutually_exclusive_group.add_argument('-v', '--verbose', action='store_true')
