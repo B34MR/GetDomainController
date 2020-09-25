@@ -1,7 +1,7 @@
 ![Supported Python versions](https://img.shields.io/badge/python-3.7-green.svg)
 
 # GetDomainController
-A python utility that leverages DNS to quickly discover windows domain controllers.
+A python utility that leverages DNS to quickly discover windows domain controllers and exchange servers.
 
 **Installation:**
 
@@ -15,6 +15,7 @@ Usage:
   python getdc.py -d contoso-a.local constoso-b.local
   python getdc.py -d contoso.local -n 8.8.8.8
   python getdc.py -d contoso.local -f host
+  python getdc.py -d contoso.local -e
 
 Required arguments:
   [-d, --domain] define domain, accepted values 'hostname', 'hostnames(seperate by a space)'
@@ -23,9 +24,10 @@ Optional arguments:
   [-n, --nameserver] define nameserver, accepted values 'hostname', 'ipaddress'
   [-f, --format] format output type, accepted values 'json(default)', 'host', 'ip' 'hostip'
   [-v, --verbose] toggle debug meesages to stdout
+  [-e, --exchange] additionally retrieve exchange hosts
 ```
 
-**JSON Format:**
+**JSON Format (Domain Controller):**
 ```
 # python getdc.py -d contoso.local
 {
@@ -37,7 +39,7 @@ Optional arguments:
 }
 ```
 
-**JSON Multi-Domain Format:**
+**JSON Multi-Domain Format (Domain Controller):**
 ```
 # python getdc.py -d contoso-a.local contoso-b.local
 {
@@ -50,6 +52,16 @@ Optional arguments:
         "ad1.contoso-b.local.": "10.2.100.10",
         "ad2.contoso-b.lcoal.": "10.2.200.10",
         "ad3.contoso-b.local.": "10.2.300.10"
+    }
+}
+```
+
+**JSON Format (Exchange Server):**
+```
+# python getdc.py -d contoso.local -e
+{
+    "contoso.local": {
+        "autodiscover.contoso.local.": "10.1.100.150"
     }
 }
 ```

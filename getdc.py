@@ -20,13 +20,13 @@ def query(name, service='', protocol='', recordtype='', nameserver=''):
 	nameserver -- Nameserver to query from (optional, default /etc/resolv.conf)
 	'''
 	
-	# DomainController list
-	dc_lst = []
+	# Hostname list
+	host_lst = []
 
 	try:
 
 		if recordtype == 'SRV':
-			if nameserver: # custom nameserver selected
+			if nameserver: # custom nameserver was defined
 				custom_resolver = dns.resolver.Resolver(configure=False)
 				custom_resolver.nameservers = [nameserver]
 				answer = custom_resolver.query(service + protocol + name, recordtype, raise_on_no_answer=True)
@@ -34,8 +34,11 @@ def query(name, service='', protocol='', recordtype='', nameserver=''):
 				answer = dns.resolver.resolve(service + protocol + name, recordtype, raise_on_no_answer=True)
 
 			for record in answer:
-				hostname = str(record).lower()[9:] # parse out srv-record for hostname
-				dc_lst.append(hostname) # populate dc_list with hostname
+				if service == '_autodiscover.': # autodiscover was defined
+					hostname = str(record).lower()[8::] # parse record for autodiscover
+				elif service == '_kerberos.':
+					hostname = str(record).lower()[9:] # parse record for kerberos
+				host_lst.append(hostname) # populate host_list with hostname
 		else:
 			if nameserver: # custom nameserver selected
 				custom_resolver = dns.resolver.Resolver(configure=False)
@@ -46,7 +49,7 @@ def query(name, service='', protocol='', recordtype='', nameserver=''):
 			
 			for record in answer:
 				ipaddress = str(record)	# convert rdata to string
-				dc_lst.append(ipaddress) # populate dc_list with ipaddress (IPAddress)
+				host_lst.append(ipaddress) # populate host_list with ipaddress (IPAddress)
 
 	except dns.resolver.NXDOMAIN as error:
 		logging.debug(f'NXDOMAIN-{error}\n')
@@ -63,7 +66,7 @@ def query(name, service='', protocol='', recordtype='', nameserver=''):
 	except Exception as error:
 		logging.debug(f'Script Error-{error}\n')
 	
-	return dc_lst
+	return host_lst
 
 
 def main():
@@ -85,41 +88,38 @@ def main():
 	else:
 		pass
 
-	# DomainController dictionary
-	dc_dct = {
+	# Hostname dictionary
+	host_dct = {
 	}
 
 	# Run func query()
 	for domain in args.domain:
-		dc_dct[domain] = {} # initiate nested dict(s) from args.domain
+		host_dct[domain] = {} # initiate nested dict(s) from args.domain
 		answer_srv = query(domain, service='_kerberos.', protocol='_tcp.', recordtype='SRV', nameserver=args.nameserver) # call query(srv) to find dc hostname
+		# Exchange was defined
+		if args.exchange:
+			answer_srv = query(domain, service='_autodiscover.', protocol='_tcp.', recordtype='SRV', nameserver=args.nameserver) # call query(srv) to find exchange hostname
 		
 		for hostname in answer_srv:
-			dc_dct[domain][str(hostname)] = '' # populat dc_dict with hostname
+			host_dct[domain][str(hostname)] = '' # populat dc_dict with hostname
 			answer_a = query(hostname, service='', protocol='', recordtype='A', nameserver=args.nameserver) # call query(a) to find dc ipaddress
 			ipaddress = '\n'.join(answer_a) # convert list to string
-			dc_dct[domain][str(hostname)] = ipaddress # populate dc_dict with ipaddress
-	
-	# Dev exchange
-	if args.exchange:
-		print('[Dev] Exchange servers ')
-		answer_srv = query(domain, service='_autodiscover.', protocol='_tcp.', recordtype='SRV', nameserver=args.nameserver) # call query(srv) to find exchange hostname
-		print(answer_srv, '\n')
-	
+			host_dct[domain][str(hostname)] = ipaddress # populate dc_dict with ipaddress
+		
 	# format type output json
 	if args.format == 'json': # stdout json
-		json_data = json.dumps(dc_dct, indent=4, sort_keys=True) # convert dc_dict to json
+		json_data = json.dumps(host_dct, indent=4, sort_keys=True) # convert dc_dict to json
 		print(json_data)
 	# format type output
 	for domain in args.domain:
 		if args.format == 'host':
-			for key in sorted(dc_dct[domain].keys()): # stdout hostname
+			for key in sorted(host_dct[domain].keys()): # stdout hostname
 				print(key)
 		if args.format == 'ip': 
-			for value in sorted(dc_dct[domain].values()): # stdout ipaddress
+			for value in sorted(host_dct[domain].values()): # stdout ipaddress
 				print(value)
 		if args.format == 'hostip':
-			for key, value in sorted(dc_dct[domain].items()): # stdout hostname/ipaddress
+			for key, value in sorted(host_dct[domain].items()): # stdout hostname/ipaddress
 				print(key, value)
 
 
