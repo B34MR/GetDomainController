@@ -29,7 +29,7 @@ def query(name, service='', protocol='', recordtype='', nameserver=''):
 			if nameserver: # custom nameserver was defined
 				custom_resolver = dns.resolver.Resolver(configure=False)
 				custom_resolver.nameservers = [nameserver]
-				answer = custom_resolver.query(service + protocol + name, recordtype, raise_on_no_answer=True)
+				answer = custom_resolver.resolve(service + protocol + name, recordtype, raise_on_no_answer=True)
 			else: # default nameserver selected
 				answer = dns.resolver.resolve(service + protocol + name, recordtype, raise_on_no_answer=True)
 
@@ -43,7 +43,7 @@ def query(name, service='', protocol='', recordtype='', nameserver=''):
 			if nameserver: # custom nameserver selected
 				custom_resolver = dns.resolver.Resolver(configure=False)
 				custom_resolver.nameservers = [nameserver]
-				answer = custom_resolver.query(service + protocol + name, recordtype, raise_on_no_answer=True)
+				answer = custom_resolver.resolve(service + protocol + name, recordtype, raise_on_no_answer=True)
 			else: # default nameserver selected
 				answer = dns.resolver.resolve(service + protocol + name, recordtype, raise_on_no_answer=True)
 			
