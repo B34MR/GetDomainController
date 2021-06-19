@@ -75,7 +75,7 @@ def main():
 	Keyword arguments:
 	args.domain -- Domain Name (required, accepted list or single value, default none)
 	args.nameserver -- NameServer (optional, accepted hostname/ipaddress, default none)
-	args.format -- Format output type, (required, accepted values json/host/ip/hostip'NameServer, default json)
+	args.format -- Format output type, (required, accepted values [json, host, ip, hostip, zerologon)
 	args.verbose -- Toggle debug meesages to stdout (required, accepted values boolean)
 	args.exchange -- Toggle whether to look up exchange records (required, default false)
 	'''
@@ -101,14 +101,14 @@ def main():
 			answer_srv = query(domain, service='_autodiscover.', protocol='_tcp.', recordtype='SRV', nameserver=args.nameserver) # call query(srv) to find exchange hostname
 		
 		for hostname in answer_srv:
-			host_dct[domain][str(hostname)] = '' # populat dc_dict with hostname
+			host_dct[domain][str(hostname)] = '' # populat host_dct with hostname
 			answer_a = query(hostname, service='', protocol='', recordtype='A', nameserver=args.nameserver) # call query(a) to find dc ipaddress
 			ipaddress = '\n'.join(answer_a) # convert list to string
-			host_dct[domain][str(hostname)] = ipaddress # populate dc_dict with ipaddress
+			host_dct[domain][str(hostname)] = ipaddress # populate host_dct with ipaddress
 		
 	# format type output json
 	if args.format == 'json': # stdout json
-		json_data = json.dumps(host_dct, indent=4, sort_keys=True) # convert dc_dict to json
+		json_data = json.dumps(host_dct, indent=4, sort_keys=True) # convert host_dct to json
 		print(json_data)
 	# format type output
 	for domain in args.domain:
@@ -121,6 +121,9 @@ def main():
 		if args.format == 'hostip':
 			for key, value in sorted(host_dct[domain].items()): # stdout hostname/ipaddress
 				print(key, value)
+		if args.format == 'zerologon':
+			for key, value in sorted(host_dct[domain].items()): # stdout netbios-name/ipaddress
+				print(key.split('.')[0], value)
 
 
 if __name__ == "__main__":

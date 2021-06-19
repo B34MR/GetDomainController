@@ -27,7 +27,7 @@ def parse_args():
 
   Optional arguments:
     [-n, --nameserver] define nameserver, accepted values 'hostname', 'ipaddress'
-    [-f, --format] format output type, accepted values 'json(default)', 'host', 'ip' 'hostip'
+    [-f, --format] format output type, accepted values 'json(default)', 'host', 'ip', 'hostip', 'zerologon'
     [-e, --exchange] optionally retrieve exchange hosts
     [-v, --verbose] toggle debug meesages to stdout
   """
@@ -37,7 +37,7 @@ def parse_args():
   main_group = parser.add_argument_group('main_args')
   main_group.add_argument('-d', '--domain', required=True, type=str, metavar='', default='', help='Domain required', nargs='+')
   main_group.add_argument('-n', '--nameserver', required=False, type=str, metavar='', default='', help='Define Nameserver')
-  main_group.add_argument('-f', '--format', required=False, type=str, default='json', choices=['json', 'host', 'ip', 'hostip'])
+  main_group.add_argument('-f', '--format', required=False, type=str, default='json', choices=['json', 'host', 'ip', 'hostip', 'zerologon'])
   main_group.add_argument('-e', '--exchange', required=False, action='store_true')
   # Mutually Exclusive group
   mutually_exclusive_group = parser.add_mutually_exclusive_group()

@@ -22,7 +22,7 @@ Required arguments:
 
 Optional arguments:
   [-n, --nameserver] define nameserver, accepted values 'hostname', 'ipaddress'
-  [-f, --format] format output type, accepted values 'json(default)', 'host', 'ip' 'hostip'
+  [-f, --format] format output type, accepted values 'json(default)', 'host', 'ip', 'hostip', 'zerologon'
   [-v, --verbose] toggle debug meesages to stdout
   [-e, --exchange] additionally retrieve exchange hosts
 ```
@@ -88,4 +88,12 @@ ad3.contoso.local.
 ad1.contoso.local. 10.1.100.10
 ad2.contoso.lcoal. 10.1.200.10
 ad3.contoso.local. 10.1.300.10
+```
+
+**Zerologon Format:**
+```
+# python getdc.py -d contoso.local -f zerologon
+ad1 10.1.100.10
+ad2 10.1.200.10
+ad3 10.1.300.10
 ```
